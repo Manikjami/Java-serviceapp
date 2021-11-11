@@ -1,0 +1,30 @@
+pipeline {
+    agent any
+        tools {maven "Maven"}
+    stages {
+        stage("Git checkout") {
+            steps {
+                git credentialsId: 'javaserviceapp', url: 'https://github.com/Manikjami/Java-serviceapp.git'
+            }
+        }
+        stage('Code Quality') {
+            steps {
+                withSonarQubeEnv('SonarQubeServer') {
+                    sh 'gradle Sonarqube'
+                }
+            }
+        }
+        stage("Quality Gate") {
+            steps {
+              timeout(time: 15, unit: 'MINUTES') {
+                waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+        stage("Maven Build") {
+            steps {
+                sh "mvn clean package"
+            }
+        }
+    }
+}
