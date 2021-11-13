@@ -1,29 +1,26 @@
 pipeline {
     agent any
-        tools {maven "Maven"}
-    stages {
-        stage("Git checkout") {
+    tools {
+        maven "Maven3"
+    }
+stages {
+        stage('checkout') {
             steps {
                 git credentialsId: 'javaserviceapp', url: 'https://github.com/Manikjami/Java-serviceapp.git'
-            }
-        }
-        stage('Code Quality') {
+    stages {
+        stage('Build') {
             steps {
-                withSonarQubeEnv('SonarQubeServer') {
-                    sh 'gradle Sonarqube'
+
+                script {
+                    def os = System.properties['os.name'].toLowerCase()
+                    echo "OS: ${os}"                
+                    if (os.contains("linux")) {
+                      sh "mvn clean install -DskipTests" 
+                    } else {
+                      bat "mvn clean install -DskipTests"
+                    }
                 }
-            }
-        }
-        stage("Quality Gate") {
-            steps {
-              timeout(time: 15, unit: 'MINUTES') {
-                waitForQualityGate abortPipeline: true
-                }
-            }
-        }
-        stage("Maven Build") {
-            steps {
-                sh "mvn clean package"
+
             }
         }
     }
